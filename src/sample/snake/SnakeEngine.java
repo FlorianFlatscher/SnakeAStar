@@ -17,7 +17,8 @@ public class SnakeEngine extends AnimationTimer {
 
     //Time
     private final long startNanoTime = System.nanoTime();
-    private final SimpleDoubleProperty animationTimeScale = new SimpleDoubleProperty(1);
+    private long lastFrameNanoTime = startNanoTime;
+    public static final double calculationsPerSecond = 60;
 
     //Colors
     public static final Paint backgroundColor = Color.WHITE;
@@ -34,17 +35,16 @@ public class SnakeEngine extends AnimationTimer {
     public void handle(long currentNanoTime)
     {
         //Time
-        double t = (currentNanoTime - startNanoTime) / 1000000000.0;
+        final double totalSecondsPassed = (currentNanoTime - startNanoTime) / 100000000000.0;
+        final long timePassedSincePastFrame = currentNanoTime - lastFrameNanoTime;
+        final double animationTimeScale = timePassedSincePastFrame / (1000000000. / calculationsPerSecond);
+        final double fps = animationTimeScale * calculationsPerSecond;
+        System.out.println("fps: " + Math.round(fps));
 
         //Redrawing
         gc.setFill(backgroundColor);
-    }
 
-    public double getAnimationTimeScale() {
-        return animationTimeScale.get();
-    }
-
-    public SimpleDoubleProperty animationTimeScaleProperty() {
-        return animationTimeScale;
+        //Time
+        lastFrameNanoTime = currentNanoTime;
     }
 }
