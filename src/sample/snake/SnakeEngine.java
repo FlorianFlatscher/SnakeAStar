@@ -1,7 +1,7 @@
 package sample.snake;
 
 import javafx.animation.AnimationTimer;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -20,6 +20,12 @@ public class SnakeEngine extends AnimationTimer {
     private long lastFrameNanoTime = startNanoTime;
     public static final double calculationsPerSecond = 60;
 
+    private final DoubleProperty fps = new SimpleDoubleProperty(0);
+    private final DoubleProperty totalSecondsPassed = new SimpleDoubleProperty(0);
+    private final LongProperty framesPassed = new SimpleLongProperty(0);
+
+
+
     //Colors
     public static final Paint backgroundColor = Color.WHITE;
 
@@ -28,23 +34,38 @@ public class SnakeEngine extends AnimationTimer {
         Objects.requireNonNull(canvas);
         this.gc = canvas.getGraphicsContext2D();
         this.canvas = canvas;
-
     }
 
     @Override
     public void handle(long currentNanoTime)
     {
         //Time
-        final double totalSecondsPassed = (currentNanoTime - startNanoTime) / 100000000000.0;
-        final long timePassedSincePastFrame = currentNanoTime - lastFrameNanoTime;
-        final double animationTimeScale = timePassedSincePastFrame / (1000000000. / calculationsPerSecond);
-        final double fps = animationTimeScale * calculationsPerSecond;
-        System.out.println("fps: " + Math.round(fps));
+        totalSecondsPassed.setValue((currentNanoTime - startNanoTime) / 100000000000.);
+        final long nanosSinceLastFrame = currentNanoTime - lastFrameNanoTime;
+        final double animationTimeScale = nanosSinceLastFrame / (1000000000. / calculationsPerSecond);
+        fps.setValue(1000000000. / nanosSinceLastFrame);
 
         //Redrawing
         gc.setFill(backgroundColor);
 
         //Time
         lastFrameNanoTime = currentNanoTime;
+        framesPassed.setValue(framesPassed.get() + 1);
+    }
+
+    public double getFps() {
+        return fps.get();
+    }
+
+    public ReadOnlyDoubleProperty fpsProperty() {
+        return fps;
+    }
+
+    public long getFramesPassed() {
+        return framesPassed.get();
+    }
+
+    public ReadOnlyLongProperty framesPassedProperty() {
+        return framesPassed;
     }
 }

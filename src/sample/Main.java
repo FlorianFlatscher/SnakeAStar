@@ -18,8 +18,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
+        //Window
         VBox root = new VBox();
-        primaryStage.setTitle("Hello World");
+        primaryStage.setTitle("Loading...");
         primaryStage.setScene(new Scene(root, 512, 512));
         primaryStage.setResizable(false);
 
@@ -27,10 +28,17 @@ public class Main extends Application {
         Canvas canvas = new Canvas( 512, 512 );
         root.getChildren().add( canvas );
 
+        //Game
+        SnakeEngine snakeEngine = new  SnakeEngine(canvas);
 
+        //Window
+        snakeEngine.framesPassedProperty().addListener((property, oldValue, newValue) -> {
+            if (((long) newValue) % 10 == 5) {
+                primaryStage.setTitle("Snake (" + Math.round(snakeEngine.getFps()) + " fps)");
+            }
+        });
 
-        new SnakeEngine(canvas).start();
-
+        snakeEngine.start();
         primaryStage.show();
     }
 
