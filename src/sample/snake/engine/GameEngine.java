@@ -15,7 +15,7 @@ public class GameEngine extends AnimationTimer {
     //Time
     private long startNanoTime;
     private long lastFrameNanoTime;
-    public static final double calculationsPerSecond = 1; //Animation unit
+    public static final double calculationsPerSecond = 60; //Animation unit
 
     private final DoubleProperty fps = new SimpleDoubleProperty(0);
     private final DoubleProperty secondsPassed = new SimpleDoubleProperty(0);

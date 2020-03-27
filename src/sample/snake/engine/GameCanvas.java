@@ -11,8 +11,8 @@ public class GameCanvas extends Canvas {
     //Canvas
     private GameEngine engine;
 
-    public GameCanvas() {
-        //Canvas
+    public GameCanvas(int x, int y) {
+        super(x, y);
     }
 
 }

@@ -2,6 +2,7 @@ package sample;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import sample.snake.engine.GameCanvas;
@@ -16,21 +17,21 @@ public class Main extends Application {
         //Window
         VBox root = new VBox();
         primaryStage.setTitle("Loading...");
-        primaryStage.setScene(new Scene(root, 512, 512));
+        primaryStage.setScene(new Scene(root, 600, 300));
         primaryStage.setResizable(false);
 
         //Canvas
-        GameCanvas canvas = new GameCanvas();
+        GameCanvas canvas = new GameCanvas(600, 300);
+
         GameEngine gameEngine = new GameEngine();
         gameEngine.framesPassedProperty().addListener((observableValue, oldValue, newValue) -> {
             if ((long) newValue % 10 == 1) {
                 primaryStage.setTitle("Snake (" + Math.round(gameEngine.getFps()) + " fps)");
             }
         });
-
-        root.getChildren().add(canvas);
+        gameEngine.startGame(new SnakeGame(canvas, 20, 10));
         primaryStage.show();
-        gameEngine.startGame(new SnakeGame(canvas));
+        root.getChildren().addAll(canvas);
     }
 
 
