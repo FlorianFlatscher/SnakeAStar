@@ -1,20 +1,13 @@
 package sample;
 
-import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import sample.snake.engine.GameCanvas;
+import sample.snake.engine.GameEngine;
+import sample.snake.game.SnakeGame;
 
-import java.awt.*;
 
 public class Main extends Application {
 
@@ -28,19 +21,16 @@ public class Main extends Application {
 
         //Canvas
         GameCanvas canvas = new GameCanvas();
-        root.getChildren().add(canvas);
-
-
-        primaryStage.show();
-        canvas.framesPassedProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
-                if ((long) newValue % 10 == 1) {
-                    primaryStage.setTitle("Snake (" + Math.round(canvas.getFps()) + " fps)");
-                }
+        GameEngine gameEngine = new GameEngine();
+        gameEngine.framesPassedProperty().addListener((observableValue, oldValue, newValue) -> {
+            if ((long) newValue % 10 == 1) {
+                primaryStage.setTitle("Snake (" + Math.round(gameEngine.getFps()) + " fps)");
             }
         });
-        canvas.startEngine();
+
+        root.getChildren().add(canvas);
+        primaryStage.show();
+        gameEngine.startGame(new SnakeGame(canvas));
     }
 
 
