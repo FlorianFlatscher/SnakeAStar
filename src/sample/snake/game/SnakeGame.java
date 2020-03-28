@@ -1,9 +1,12 @@
 package sample.snake.game;
 
+import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.shape.StrokeType;
 import sample.snake.engine.Game;
 import sample.snake.engine.GameCanvas;
 import sample.snake.engine.GameEngine;
+import sample.snake.engine.RedrawTask;
 import sample.snake.game.colors.SnakeGameColors;
 import sample.snake.game.navigation.GridTileState;
 import sample.snake.game.navigation.Orientation;
@@ -13,9 +16,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 public class SnakeGame implements Game {
-    //Engine
-    GameCanvas canvas;
-    GraphicsContext gc;
+
 
     //Game
     int dimensionX, dimensionY;
@@ -26,12 +27,9 @@ public class SnakeGame implements Game {
     HashSet<Vector2D>freeSpots = new HashSet<>();
 
     //Settings
-    public static final double snakeSpeed = 0.1;
+    public static final double snakeSpeed = 1;
 
-    public SnakeGame(GameCanvas canvas, int dimensionX, int dimensionY) {
-        Objects.requireNonNull(canvas);
-        this.canvas = canvas;
-        this.gc = canvas.getGraphicsContext2D();
+    public SnakeGame(int dimensionX, int dimensionY) {
 
         //Game
         this.dimensionX = dimensionX;
@@ -54,29 +52,37 @@ public class SnakeGame implements Game {
     }
 
     @Override
-    public void update(GameEngine engine, double animationUnitScale) {
-        //Prepare
-        double scaleX = canvas.getWidth() / grid.length;
-        double scaleY = canvas.getHeight() / grid[0].length;
-        gc.save();
-        gc.scale(scaleX, scaleY);
-        gc.setFill(SnakeGameColors.backgroundColor);
-        gc.clearRect(0, 0, dimensionX, dimensionY);
+    public RedrawTask update(GameEngine engine, double deltaTime) {
+
 
         //SnakeMovement
-        for (int i = 0; i < snake.size(); i++) {
+        for (int i = snake.size() - 1; i >= 0; i--) {
             Vector2D vel = Vector2D.fromOrientation(snakePath.get(i));
-            System.out.println("animationUnitScale = " + animationUnitScale);
-            vel.multiply(animationUnitScale * snakeSpeed);
+            System.out.println(" fps = " + engine.getFps());
+            vel.multiply(snakeSpeed * deltaTime);
             snake.get(i).add(vel);
         }
 
         //rendering
-        gc.setFill(SnakeGameColors.snakeColor);
-        for (Vector2D vector2D : snake) {
-            gc.fillRect(vector2D.getX(), vector2D.getY(), 1, 1);
-        }
-        gc.restore();
+        return new RedrawTask() {
+            @Override
+            public void draw(GraphicsContext gc) {
+                Canvas canvas = gc.getCanvas();
+                //Prepare
+                double scaleX = canvas.getWidth() / grid.length;
+                double scaleY = canvas.getHeight() / grid[0].length;
+                gc.save();
+                gc.scale(scaleX, scaleY);
+                gc.setFill(SnakeGameColors.backgroundColor);
+                gc.clearRect(0, 0, dimensionX, dimensionY);
+
+                gc.setFill(SnakeGameColors.snakeColor);
+                for (Vector2D vector2D : snake) {
+                    gc.fillRect(vector2D.getX() - 0.1, vector2D.getY() - 0.1, 1.2, 1.2);
+                }
+                gc.restore();
+            }
+        };
     }
 
     private void setFruit() {

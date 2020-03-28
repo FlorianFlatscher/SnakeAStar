@@ -1,5 +1,5 @@
 package sample.snake.engine;
 
 public interface Game {
-    void update(GameEngine engine, double animationUnitScale);
+    RedrawTask update(GameEngine engine, double deltaTime);
 }

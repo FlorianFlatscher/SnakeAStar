@@ -6,66 +6,96 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 
+import javax.swing.*;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class GameEngine extends AnimationTimer {
-    private Game game;
+public class GameEngine{
+    private boolean running;
+    private Canvas canvas;
 
     //Time
     private long startNanoTime;
     private long lastFrameNanoTime;
-    public static final double calculationsPerSecond = 60; //Animation unit
 
     private final DoubleProperty fps = new SimpleDoubleProperty(0);
     private final DoubleProperty secondsPassed = new SimpleDoubleProperty(0);
     private final LongProperty framesPassed = new SimpleLongProperty(0);
+    private final DoubleProperty targetFPS = new SimpleDoubleProperty(60);
 
-    @Override
-    public void handle(long currentNanoTime) {
-        //Time
-        secondsPassed.setValue((currentNanoTime - startNanoTime) / 100000000000.);
-        final long nanosSinceLastFrame = currentNanoTime - lastFrameNanoTime;
-        final double animationUnitScale = nanosSinceLastFrame / (1000000000. / calculationsPerSecond);
-        fps.setValue(1000000000. / nanosSinceLastFrame);
-
-        Objects.requireNonNull(game, "No game to start!");
-        game.update(this, animationUnitScale);
-
-        //Time
-        lastFrameNanoTime = currentNanoTime;
-        framesPassed.setValue(framesPassed.get() + 1);
+    public GameEngine (Canvas canvas) {
+        Objects.requireNonNull(this.canvas = canvas);
     }
 
     public void startGame(Game g) {
-        this.game = Objects.requireNonNull(g);
-
-        super.start();
         startNanoTime = lastFrameNanoTime = System.nanoTime();
+        running = true;
+
+        CanvasRedrawTaskManager redrawManager = new CanvasRedrawTaskManager(canvas);
+        redrawManager.start();
+
+        Thread t = new Thread(() -> {
+            while (running) {
+                secondsPassed.setValue((System.nanoTime() - startNanoTime) / 1_000_000_000.);
+                final long nanosSinceLastFrame = System.nanoTime() - lastFrameNanoTime;
+
+                if (nanosSinceLastFrame >= 1_000_000_000. * (1/getTargetFPS())) {
+                    fps.setValue(1_000_000_000. / (nanosSinceLastFrame));
+
+                    RedrawTask renderTask = g.update(this, nanosSinceLastFrame / 1_000_000_000.0);
+                    redrawManager.requestRedraw(renderTask);
+                    lastFrameNanoTime = System.nanoTime();
+                    framesPassed.setValue(framesPassed.get() + 1);
+                }
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+
+    }
+
+    public void stop() {
+        running = false;
     }
 
     public double getFps() {
         return fps.get();
     }
 
-    public DoubleProperty fpsProperty() {
-        return fps;
+    public double getTargetFPS() {
+        return targetFPS.get();
+    }
+
+    public DoubleProperty targetFPSProperty() {
+        return targetFPS;
     }
 
     public long getFramesPassed() {
         return framesPassed.get();
     }
+}
 
-    public LongProperty framesPassedProperty() {
-        return framesPassed;
+class CanvasRedrawTaskManager extends AnimationTimer {
+    private final AtomicReference<RedrawTask> data = new AtomicReference<>(null);
+    private Canvas canvas;
+
+    public CanvasRedrawTaskManager(Canvas c) {
+        canvas = c;
     }
 
-    public Game getGame() {
-        return game;
+    public void requestRedraw(RedrawTask dataToDraw) {
+        data.set(dataToDraw);
+        start(); // in case, not already started
     }
 
-    public GameEngine setGame(Game game) {
-        this.game = game;
-        return this;
+    public void handle(long now) {
+        // check if new data is available
+        RedrawTask dataToDraw = data.getAndSet(null);
+        if (dataToDraw != null) {
+            dataToDraw.draw(canvas.getGraphicsContext2D());
+        }
     }
 }
+
