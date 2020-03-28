@@ -9,6 +9,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import sample.snake.engine.Game;
@@ -31,8 +32,9 @@ public class Main extends Application {
         GameCanvas canvas = new GameCanvas(600, 300);
 
         GameEngine gameEngine = new GameEngine(canvas);
+        SnakeGame snakeGame = new SnakeGame(20, 10);
 
-        gameEngine.startGame(new SnakeGame(20, 10));
+        gameEngine.startGame(snakeGame);
         primaryStage.show();
 
         new AnimationTimer() {
@@ -42,7 +44,9 @@ public class Main extends Application {
             }
         }.start();
 
-
+        primaryStage.getScene().setOnKeyPressed(keyEvent -> {
+            snakeGame.keyPressed(keyEvent);
+        });
 
         root.getChildren().addAll(canvas);
     }

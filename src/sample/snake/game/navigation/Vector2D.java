@@ -33,9 +33,32 @@ public class Vector2D {
         y *= factor;
     }
 
-    public void add(Vector2D other) {
+    public Vector2D add(Vector2D other) {
         x += other.getX();
         y += other.getY();
+        return this;
+    }
+
+    public double getMag() {
+        return Math.sqrt(x*x + y*y);
+    }
+
+    public void setMag(double mag) {
+        double factor = mag / getMag();
+        x *= factor;
+        y *= factor;
+    }
+
+    public Vector2D floor() {
+        x = Math.floor(x);
+        y = Math.floor(y);
+        return this;
+    }
+
+    public Vector2D sub(Vector2D other) {
+        x -= other.x;
+        y -= other.y;
+        return this;
     }
 
     public double getOrientation() {
