@@ -19,13 +19,13 @@ public class SnakeGame implements Game {
 
 
     //Game
-    int dimensionX, dimensionY;
-    GridTileState[][] grid;
-    ArrayList<Vector2D> snake;
-    ArrayList<Orientation> snakePath;
-    Vector2D fruit;
-    HashSet<Vector2D> freeSpots = new HashSet<>();
-    Orientation currentDirection = Orientation.EAST;
+    private int dimensionX, dimensionY;
+    private GridTileState[][] grid;
+    private ArrayList<Vector2D> snake;
+    private ArrayList<Orientation> snakePath;
+    private Vector2D fruit;
+    private HashSet<Vector2D> freeSpots = new HashSet<>();
+    private Orientation currentDirection = Orientation.EAST;
 
     //Settings
     public static final double snakeSpeed = 10;
@@ -68,7 +68,7 @@ public class SnakeGame implements Game {
                     currentIndex++;
                 }
                 Vector2D vel = Vector2D.fromOrientation(snakePath.get(currentIndex));
-                System.out.println(distance+ " " + snake.get(i).cloneVector2D().add(vel).floor().sub(snake.get(i)).getMag());
+
 
                 vel.setMag(Math.min(distance, snake.get(i).cloneVector2D().add(vel).floor().sub(snake.get(i)).getMag()));
                 distance -= vel.getMag();
@@ -79,24 +79,24 @@ public class SnakeGame implements Game {
         }
 
         //rendering
-        return new RedrawTask() {
-            @Override
-            public void draw(GraphicsContext gc) {
-                Canvas canvas = gc.getCanvas();
-                //Prepare
-                double scaleX = canvas.getWidth() / grid.length;
-                double scaleY = canvas.getHeight() / grid[0].length;
-                gc.save();
-                gc.scale(scaleX, scaleY);
-                gc.setFill(SnakeGameColors.backgroundColor);
-                gc.clearRect(0, 0, dimensionX, dimensionY);
 
-                gc.setFill(SnakeGameColors.snakeColor);
-                for (Vector2D vector2D : snake) {
-                    gc.fillRect(vector2D.getX() - 0.1, vector2D.getY() - 0.1, 1.2, 1.2);
-                }
-                gc.restore();
+
+
+        return gc -> {
+            Canvas canvas = gc.getCanvas();
+            //Prepare
+            double scaleX = canvas.getWidth() / grid.length;
+            double scaleY = canvas.getHeight() / grid[0].length;
+            gc.save();
+            gc.scale(scaleX, scaleY);
+            gc.setFill(SnakeGameColors.backgroundColor);
+            gc.clearRect(0, 0, dimensionX, dimensionY);
+
+            gc.setFill(SnakeGameColors.snakeColor);
+            for (Vector2D vector2D : snake) {
+                gc.fillRect(vector2D.getX(), vector2D.getY() , 1, 1);
             }
+            gc.restore();
         };
     }
 
