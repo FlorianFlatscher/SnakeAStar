@@ -21,7 +21,7 @@ public class GameEngine{
     private final DoubleProperty fps = new SimpleDoubleProperty(0);
     private final DoubleProperty secondsPassed = new SimpleDoubleProperty(0);
     private final LongProperty framesPassed = new SimpleLongProperty(0);
-    private final DoubleProperty targetFPS = new SimpleDoubleProperty(50);
+    private final DoubleProperty targetFPS = new SimpleDoubleProperty(100);
 
     public GameEngine (Canvas canvas) {
         Objects.requireNonNull(this.canvas = canvas);
@@ -32,12 +32,10 @@ public class GameEngine{
         startNanoTime = lastFrameNanoTime = System.nanoTime();
         running = true;
 
-        CanvasRedrawTaskManager redrawManager = new CanvasRedrawTaskManager(canvas);
-        redrawManager.start();
 
-
-        Thread t = new Thread(() -> {
-            while (running) {
+        AnimationTimer timer = new AnimationTimer() {
+            @Override
+            public void handle(long l) {
                 secondsPassed.setValue((System.nanoTime() - startNanoTime) / 1_000_000_000.0);
                 final long nanosSinceLastFrame = System.nanoTime() - lastFrameNanoTime;
                 if (nanosSinceLastFrame / 1_000_000_000.0 >= (1/getTargetFPS())) {
@@ -45,15 +43,15 @@ public class GameEngine{
 
                     fps.setValue(1_000_000_000.0 / (nanosSinceLastFrame));
 
-                    RedrawTask renderTask = g.update(this, nanosSinceLastFrame / 1_000_000_000.0);
+                    RedrawTask renderTask = g.update(GameEngine.this, nanosSinceLastFrame / 1_000_000_000.0);
                     renderTask.draw(canvas.getGraphicsContext2D());
                     //redrawManager.requestRedraw(renderTask);
                     framesPassed.setValue(framesPassed.get() + 1);
                 }
             }
-        });
-        t.setDaemon(true);
-        t.start();
+        };
+
+        timer.start();
 
     }
 
@@ -77,51 +75,3 @@ public class GameEngine{
         return framesPassed.get();
     }
 }
-
-class CanvasRedrawTaskManager extends AnimationTimer {
-    private final AtomicReference<RedrawTask> data = new AtomicReference<>(null);
-    private Canvas canvas;
-    private FPSCounter fpsCounter;
-    private long lastUpdate;
-
-    public CanvasRedrawTaskManager(Canvas c) {
-        canvas = c;
-        lastUpdate = System.nanoTime();
-        fpsCounter = new FPSCounter(3);
-    }
-
-    public void requestRedraw(RedrawTask dataToDraw) {
-        data.set(dataToDraw);
-    }
-
-    public void handle(long now) {
-        long deltaTime = now - lastUpdate;
-        fpsCounter.note(1_000_000_000. / deltaTime);
-        // check if new data is available
-//        try {
-//            Thread.sleep(0, (int) Math.max(1_000_000_000./60. - deltaTime, 0));
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
-
-//        if (deltaTime > 1_000_000_000./70.) {
-            System.out.println(deltaTime);
-            RedrawTask dataToDraw = data.getAndSet(null);
-            if (dataToDraw != null) {
-                dataToDraw.draw(canvas.getGraphicsContext2D());
-            }
-            lastUpdate = now;
-      //  }
-
-    }
-
-    public double getRenderingFPS() {
-        return fpsCounter.getFps();
-    }
-
-    public ReadOnlyDoubleProperty renderingFPSProperty() {
-        return fpsCounter.fpsProperty();
-    }
-}
-
