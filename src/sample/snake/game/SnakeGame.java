@@ -87,7 +87,6 @@ public class SnakeGame implements Game {
 
             Canvas canvas = gc.getCanvas();
             //Prepare
-            canva
 
             double scaleX = canvas.getWidth() / grid.length;
             double scaleY = canvas.getHeight() / grid[0].length;
