@@ -21,7 +21,7 @@ public class GameEngine{
     private final DoubleProperty fps = new SimpleDoubleProperty(0);
     private final DoubleProperty secondsPassed = new SimpleDoubleProperty(0);
     private final LongProperty framesPassed = new SimpleLongProperty(0);
-    private final DoubleProperty targetFPS = new SimpleDoubleProperty(50);
+    private final DoubleProperty targetFPS = new SimpleDoubleProperty(1000);
 
     public GameEngine (Canvas canvas) {
         Objects.requireNonNull(this.canvas = canvas);
@@ -39,16 +39,18 @@ public class GameEngine{
         Thread t = new Thread(() -> {
             while (running) {
                 secondsPassed.setValue((System.nanoTime() - startNanoTime) / 1_000_000_000.0);
+                RedrawTask redrawTask = null;
                 final long nanosSinceLastFrame = System.nanoTime() - lastFrameNanoTime;
                 if (nanosSinceLastFrame / 1_000_000_000.0 >= (1/getTargetFPS())) {
                     lastFrameNanoTime = System.nanoTime();
 
                     fps.setValue(1_000_000_000.0 / (nanosSinceLastFrame));
 
-                    RedrawTask renderTask = g.update(this, nanosSinceLastFrame / 1_000_000_000.0);
-                    renderTask.draw(canvas.getGraphicsContext2D());
-                    //redrawManager.requestRedraw(renderTask);
+                    redrawTask = g.update(this, nanosSinceLastFrame / 1_000_000_000.0);
                     framesPassed.setValue(framesPassed.get() + 1);
+                }
+                if (redrawTask != null) {
+                    redrawTask.draw(canvas.getGraphicsContext2D());
                 }
             }
         });

@@ -1,5 +1,6 @@
 package sample.snake.game;
 
+import javafx.concurrent.Task;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
@@ -46,7 +47,7 @@ public class SnakeGame implements Game {
 
         snake = new ArrayList<>();
         snakePath = new ArrayList<>();
-        for (int i = 2; i >= 0; --i) {
+        for (int i = 10; i >= 0; --i) {
             addSnakePart(i, 0);
             snakePath.add(Orientation.EAST);
         }
@@ -83,8 +84,11 @@ public class SnakeGame implements Game {
 
 
         return gc -> {
+
             Canvas canvas = gc.getCanvas();
             //Prepare
+            canva
+
             double scaleX = canvas.getWidth() / grid.length;
             double scaleY = canvas.getHeight() / grid[0].length;
             gc.save();
@@ -97,6 +101,13 @@ public class SnakeGame implements Game {
                 gc.fillRect(vector2D.getX(), vector2D.getY() , 1, 1);
             }
             gc.restore();
+            Task<String> task = new Task<String>() {
+                @Override
+                protected String call() throws Exception {
+                    return null;
+                }
+            };
+
         };
     }
 
