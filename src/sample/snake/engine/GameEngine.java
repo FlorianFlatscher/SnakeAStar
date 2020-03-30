@@ -37,6 +37,7 @@ public class GameEngine{
             @Override
             public void handle(long l) {
                 secondsPassed.setValue((System.nanoTime() - startNanoTime) / 1_000_000_000.0);
+                RedrawTask redrawTask = null;
                 final long nanosSinceLastFrame = System.nanoTime() - lastFrameNanoTime;
                 if (nanosSinceLastFrame / 1_000_000_000.0 >= (1/getTargetFPS())) {
                     lastFrameNanoTime = System.nanoTime();
@@ -47,6 +48,9 @@ public class GameEngine{
                     renderTask.draw(canvas.getGraphicsContext2D());
                     //redrawManager.requestRedraw(renderTask);
                     framesPassed.setValue(framesPassed.get() + 1);
+                }
+                if (redrawTask != null) {
+                    redrawTask.draw(canvas.getGraphicsContext2D());
                 }
             }
         };
