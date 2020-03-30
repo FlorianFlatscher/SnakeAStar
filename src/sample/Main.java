@@ -8,9 +8,12 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import sample.snake.engine.Game;
 import sample.snake.engine.GameEngine;
@@ -28,23 +31,24 @@ public class Main extends Application {
         primaryStage.setResizable(false);
 
         //Canvas
-        GameEngine engine = new GameEngine();
+        Canvas gameCanvas = new Canvas(600, 300);
+        GameEngine<SnakeGame> engine = new GameEngine<>(gameCanvas, SnakeGame.class);
+        engine.start();
 
-        SnakeGame snakeGame = new SnakeGame(20, 10);
 
-        gameCanvas.startGame(snakeGame);
+
+
         primaryStage.show();
 
-        new AnimationTimer() {
-            @Override
-            public void handle(long l) {
-                primaryStage.setTitle("Snake (" + Math.round(gameCanvas.getFps()) + " fps)");
-            }
-        }.start();
+//        new AnimationTimer() {
+//            @Override
+//            public void handle(long l) {
+//                primaryStage.setTitle("Snake (" + Math.round(gameCanvas.getFps()) + " fps)");
+//            }
+//        }.start();
 
 
-        root.getChildren().addAll(gameCanvas
-        );
+        root.getChildren().add(gameCanvas);
     }
 
 

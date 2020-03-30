@@ -1,30 +1,26 @@
 package sample.snake.engine;
 
-import javafx.animation.AnimationTimer;
 import javafx.beans.property.*;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.InputMethodEvent;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+import sample.snake.game.SnakeGame;
 
-import javax.swing.*;
-import java.awt.event.InputEvent;
-import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GameEngine<GameType extends Game> {
+public class GameEngine<T extends Game> {
     //Canvas
     private Canvas canvas;
 
     //Game
-    private GameType game;
+    private T game;
     private AtomicBoolean running = new AtomicBoolean(false);
-    private final List<GameTask> gameTasks = new ArrayList<>();
+    private final ConcurrentLinkedDeque<GameTask<T>> gameTasks = new ConcurrentLinkedDeque<>();
 
 
     //Time
@@ -35,11 +31,15 @@ public class GameEngine<GameType extends Game> {
     private final DoubleProperty secondsPassed = new SimpleDoubleProperty(0);
     private final LongProperty framesPassed = new SimpleLongProperty(0);
 
-    public GameEngine(Canvas canvas, GameType game) {
-        Objects.requireNonNull(canvas = canvas);
+    public GameEngine(Canvas canvas, Class<T> gameClass)  {
+        Objects.requireNonNull(this.canvas = canvas);
         canvas.setFocusTraversable(true);
         canvas.requestFocus();
-        this.game = game;
+        try {
+            game = gameClass.getConstructor().newInstance();
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -59,29 +59,32 @@ public class GameEngine<GameType extends Game> {
                 final long nanosSinceLastFrame = System.nanoTime() - lastFrameNanoTime;
                 if (nanosSinceLastFrame / 1_000_000_000.0 >= (1 / getTargetFPS())) {
                     lastFrameNanoTime = System.nanoTime();
-
                     fps.setValue(1_000_000_000.0 / (nanosSinceLastFrame));
 
-                    game.update(virtualCanvas.getGraphicsContext2D(), nanosSinceLastFrame / 1_000_000_000.0);
-                    //redrawManager.requestRedraw(renderTask);
+                    virtualCanvas.setHeight(canvas.getHeight());
+                    virtualCanvas.setWidth(canvas.getWidth());
 
+                    game.update(virtualCanvas.getGraphicsContext2D(), nanosSinceLastFrame / 1_000_000_000.0);
+                    WritableImage image = canvas.snapshot(new SnapshotParameters(), null);
+                    canvas.getGraphicsContext2D().drawImage(image, 0, 0);
+
+                    for (GameTask<T> gameTask : gameTasks) {
+                        gameTask.run(game);
+                    }
 
                     framesPassed.setValue(framesPassed.get() + 1);
 
-                    synchronized (gameTasks) {
 
-                    }
                 }
             }
         });
+        gameThread.setDaemon(true);
         running.set(true);
         gameThread.start();
     }
 
-    public void addGameTask() {
-        synchronized (gameTasks) {
-            gameTasks.addAll(Arrays.asList(tasks));
-        }
+    public void addGameTask(GameTask<T> task) {
+        gameTasks.add(task);
     }
 
 

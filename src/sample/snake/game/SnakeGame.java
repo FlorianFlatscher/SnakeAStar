@@ -30,11 +30,11 @@ public class SnakeGame extends Game {
     //Settings
     public static final double snakeSpeed = 10;
 
-    public SnakeGame(int dimensionX, int dimensionY) {
+    public SnakeGame() {
 
         //Game
-        this.dimensionX = dimensionX;
-        this.dimensionY = dimensionY;
+        this.dimensionX = 20;
+        this.dimensionY = 10;
         grid = new GridTileState[dimensionX][dimensionY];
 
         freeSpots = new HashSet<>();
@@ -92,12 +92,6 @@ public class SnakeGame extends Game {
             gc.fillRect(vector2D.getX(), vector2D.getY(), 1, 1);
         }
         gc.restore();
-        Task<String> task = new Task<String>() {
-            @Override
-            protected String call() throws Exception {
-                return null;
-            }
-        };
     }
 
     private void setFruit() {
