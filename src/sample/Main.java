@@ -13,7 +13,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import sample.snake.engine.Game;
-import sample.snake.engine.GameCanvas;
 import sample.snake.engine.GameEngine;
 import sample.snake.game.SnakeGame;
 
@@ -29,26 +28,23 @@ public class Main extends Application {
         primaryStage.setResizable(false);
 
         //Canvas
-        GameCanvas canvas = new GameCanvas(600, 300);
+        GameEngine engine = new GameEngine();
 
-        GameEngine gameEngine = new GameEngine(canvas);
         SnakeGame snakeGame = new SnakeGame(20, 10);
 
-        gameEngine.startGame(snakeGame);
+        gameCanvas.startGame(snakeGame);
         primaryStage.show();
 
         new AnimationTimer() {
             @Override
             public void handle(long l) {
-                primaryStage.setTitle("Snake (" + Math.round(gameEngine.getFps()) + " fps)");
+                primaryStage.setTitle("Snake (" + Math.round(gameCanvas.getFps()) + " fps)");
             }
         }.start();
 
-        primaryStage.getScene().setOnKeyPressed(keyEvent -> {
-            snakeGame.keyPressed(keyEvent);
-        });
 
-        root.getChildren().addAll(canvas);
+        root.getChildren().addAll(gameCanvas
+        );
     }
 
 

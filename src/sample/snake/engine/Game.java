@@ -1,6 +1,10 @@
 package sample.snake.engine;
 
-public interface Game {
-    RedrawTask update(GameEngine engine, double deltaTime);
 
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+
+public abstract class Game {
+    public abstract void update(GraphicsContext graphicsContext, double deltaTime);
 }

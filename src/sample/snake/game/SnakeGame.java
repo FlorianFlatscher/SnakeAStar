@@ -6,7 +6,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.shape.StrokeType;
 import sample.snake.engine.Game;
-import sample.snake.engine.GameCanvas;
 import sample.snake.engine.GameEngine;
 import sample.snake.engine.RedrawTask;
 import sample.snake.game.colors.SnakeGameColors;
@@ -16,7 +15,7 @@ import sample.snake.game.navigation.Vector2D;
 
 import java.util.*;
 
-public class SnakeGame implements Game {
+public class SnakeGame extends Game {
 
 
     //Game
@@ -54,9 +53,7 @@ public class SnakeGame implements Game {
     }
 
     @Override
-    public RedrawTask update(GameEngine engine, double deltaTime) {
-
-
+    public void update(GraphicsContext gc, double deltaTime) {
         //SnakeMovement
         for (int i = snake.size() - 1; i >= 0; i--) {
             double distance = snakeSpeed * deltaTime;
@@ -78,35 +75,28 @@ public class SnakeGame implements Game {
             }
             while (distance > 0);
         }
-
         //rendering
 
+        Canvas canvas = gc.getCanvas();
+        //Prepare
 
+        double scaleX = canvas.getWidth() / grid.length;
+        double scaleY = canvas.getHeight() / grid[0].length;
+        gc.save();
+        gc.scale(scaleX, scaleY);
+        gc.setFill(SnakeGameColors.backgroundColor);
+        gc.clearRect(0, 0, dimensionX, dimensionY);
 
-        return gc -> {
-
-            Canvas canvas = gc.getCanvas();
-            //Prepare
-
-            double scaleX = canvas.getWidth() / grid.length;
-            double scaleY = canvas.getHeight() / grid[0].length;
-            gc.save();
-            gc.scale(scaleX, scaleY);
-            gc.setFill(SnakeGameColors.backgroundColor);
-            gc.clearRect(0, 0, dimensionX, dimensionY);
-
-            gc.setFill(SnakeGameColors.snakeColor);
-            for (Vector2D vector2D : snake) {
-                gc.fillRect(vector2D.getX(), vector2D.getY() , 1, 1);
+        gc.setFill(SnakeGameColors.snakeColor);
+        for (Vector2D vector2D : snake) {
+            gc.fillRect(vector2D.getX(), vector2D.getY(), 1, 1);
+        }
+        gc.restore();
+        Task<String> task = new Task<String>() {
+            @Override
+            protected String call() throws Exception {
+                return null;
             }
-            gc.restore();
-            Task<String> task = new Task<String>() {
-                @Override
-                protected String call() throws Exception {
-                    return null;
-                }
-            };
-
         };
     }
 
@@ -135,22 +125,5 @@ public class SnakeGame implements Game {
         Vector2D pos = snake.remove(indexInSnake);
         freeSpots.add(pos.cloneVector2D());
         grid[(int) Math.round(pos.getX())][(int) Math.round(pos.getY())] = GridTileState.EMPTY;
-    }
-
-    public void keyPressed(KeyEvent event) {
-        switch (event.getCode()) {
-            case UP:
-                currentDirection = Orientation.NORTH;
-                break;
-            case RIGHT:
-                currentDirection = Orientation.EAST;
-                break;
-            case DOWN:
-                currentDirection = Orientation.SOUTH;
-                break;
-            case LEFT:
-                currentDirection = Orientation.WEST;
-                break;
-        }
     }
 }
