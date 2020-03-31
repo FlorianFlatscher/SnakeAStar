@@ -1,5 +1,9 @@
 package sample.snake.engine;
 
+import javafx.animation.AnimationTimer;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -31,7 +35,7 @@ public class GameEngine<T extends Game> {
     private final DoubleProperty secondsPassed = new SimpleDoubleProperty(0);
     private final LongProperty framesPassed = new SimpleLongProperty(0);
 
-    public GameEngine(Canvas canvas, Class<T> gameClass)  {
+    public GameEngine(Canvas canvas, Class<T> gameClass) {
         Objects.requireNonNull(this.canvas = canvas);
         canvas.setFocusTraversable(true);
         canvas.requestFocus();
@@ -50,43 +54,36 @@ public class GameEngine<T extends Game> {
         AtomicReference<KeyCode> lastKey = new AtomicReference<>();
         canvas.setOnKeyPressed((keyEvent -> lastKey.set(keyEvent.getCode())));
 
-        //Game
-        Thread gameThread = new Thread(() -> {
-            Canvas virtualCanvas = new Canvas();
-
-            while (running.get()) {
+        Timeline line = new Timeline(120, new KeyFrame());
+            @Override
+            public void handle(long l) {
                 secondsPassed.setValue((System.nanoTime() - startNanoTime) / 1_000_000_000.0);
                 final long nanosSinceLastFrame = System.nanoTime() - lastFrameNanoTime;
-                if (nanosSinceLastFrame / 1_000_000_000.0 >= (1 / getTargetFPS())) {
-                    lastFrameNanoTime = System.nanoTime();
-                    fps.setValue(1_000_000_000.0 / (nanosSinceLastFrame));
+                fps.setValue(1_000_000_000.0 / (nanosSinceLastFrame));
+                lastFrameNanoTime = System.nanoTime();
 
-                    virtualCanvas.setHeight(canvas.getHeight());
-                    virtualCanvas.setWidth(canvas.getWidth());
-
-                    game.update(virtualCanvas.getGraphicsContext2D(), nanosSinceLastFrame / 1_000_000_000.0);
-                    WritableImage image = canvas.snapshot(new SnapshotParameters(), null);
-                    canvas.getGraphicsContext2D().drawImage(image, 0, 0);
-
-                    for (GameTask<T> gameTask : gameTasks) {
-                        gameTask.run(game);
-                    }
-
-                    framesPassed.setValue(framesPassed.get() + 1);
-
-
-                }
+                framesPassed.setValue(framesPassed.get() + 1);
             }
-        });
-        gameThread.setDaemon(true);
-        running.set(true);
-        gameThread.start();
-    }
 
-    public void addGameTask(GameTask<T> task) {
-        gameTasks.add(task);
-    }
 
+        final LongProperty lastUpdateTime = new SimpleLongProperty(0);
+        final AnimationTimer timer = new AnimationTimer() {
+            @Override
+            public void handle(long timestamp) {
+                if (lastUpdateTime.get() > 0) {
+                    long elapsedTime = timestamp - lastUpdateTime.get();
+                    checkCollisions(ballContainer.getWidth(), ballContainer.getHeight());
+                    game.update(canvas.getGraphicsContext2D(), 1/60.);
+
+                    frameStats.addFrame(elapsedTime);
+                }
+                lastUpdateTime.set(timestamp);
+            }
+
+        };
+        timer.start();
+
+    }
 
     public void stopGame() {
         running.set(false);

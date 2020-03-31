@@ -38,14 +38,17 @@ public class Main extends Application {
 
 
 
+
+
         primaryStage.show();
 
-//        new AnimationTimer() {
-//            @Override
-//            public void handle(long l) {
-//                primaryStage.setTitle("Snake (" + Math.round(gameCanvas.getFps()) + " fps)");
-//            }
-//        }.start();
+        new AnimationTimer() {
+
+            @Override
+            public void handle(long l) {
+                primaryStage.setTitle("Snake (" + Math.round(engine.getFps()) + " fps)");
+            }
+        }.start();
 
 
         root.getChildren().add(gameCanvas);
