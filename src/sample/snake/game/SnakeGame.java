@@ -1,123 +1,148 @@
 package sample.snake.game;
 
-import javafx.concurrent.Task;
+import javafx.geometry.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.effect.Light;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.shape.StrokeType;
-import sample.snake.engine.Game;
-import sample.snake.engine.GameEngine;
-import sample.snake.engine.RedrawTask;
-import sample.snake.game.colors.SnakeGameColors;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.FillRule;
+import javafx.scene.transform.Affine;
 import sample.snake.game.navigation.GridTileState;
 import sample.snake.game.navigation.Orientation;
-import sample.snake.game.navigation.Vector2D;
 
 import java.util.*;
 
-public class SnakeGame extends Game {
+public class SnakeGame {
 
 
     //Game
-    private int dimensionX, dimensionY;
-    private GridTileState[][] grid;
-    private ArrayList<Vector2D> snake;
-    private ArrayList<Orientation> snakePath;
-    private Vector2D fruit;
-    private HashSet<Vector2D> freeSpots = new HashSet<>();
-    private Orientation currentDirection = Orientation.EAST;
+    private Dimension2D dimension;
+    private ArrayList<Point2D> snakeTiles;
+    private Point2D fruit;
+    private Side currentOrientation = Side.RIGHT;
+    private Side scheduledOrientation = currentOrientation;
+    private double movementOffset;
 
     //Settings
-    public static final double snakeSpeed = 10;
+    public static final double snakeSpeed = 0.2;
 
-    public SnakeGame() {
-
+    public SnakeGame(Dimension2D dimension) {
         //Game
-        this.dimensionX = 20;
-        this.dimensionY = 10;
-        grid = new GridTileState[dimensionX][dimensionY];
-
-        freeSpots = new HashSet<>();
-        for (int x = 0; x < dimensionX; x++) {
-            for (int y = 0; y < dimensionY; y++) {
-                freeSpots.add(new Vector2D(x, y));
-            }
+        this.dimension = dimension;
+        snakeTiles = new ArrayList<>();
+        for (int i = 2; i >= 0; --i) {
+            snakeTiles.add(new Point2D(i, 0));
         }
-
-        snake = new ArrayList<>();
-        snakePath = new ArrayList<>();
-        for (int i = 10; i >= 0; --i) {
-            addSnakePart(i, 0);
-            snakePath.add(Orientation.EAST);
-        }
+        setFruit();
     }
 
-    @Override
-    public void update(GraphicsContext gc, double deltaTime) {
-        //SnakeMovement
-        for (int i = snake.size() - 1; i >= 0; i--) {
-            double distance = snakeSpeed * deltaTime;
+    public void update(GraphicsContext gc) {
 
-            int currentIndex = i;
-            do {
-                if (currentIndex < 0) {
-                    snakePath.remove(snakePath.size() - 1);
-                    snakePath.add(0, currentDirection);
-                    currentIndex++;
-                }
-                Vector2D vel = Vector2D.fromOrientation(snakePath.get(currentIndex));
+        //Movement
+        double distanceLeft = snakeSpeed;
+        while (distanceLeft > 0) {
+            double stepSize = Math.min(distanceLeft, 1 - movementOffset);
+            distanceLeft -= stepSize;
 
+            movementOffset += stepSize;
+            if (movementOffset >= 1) {
+                movementOffset = 0;
+                addNewSnakePoint();
+                currentOrientation = scheduledOrientation;
 
-                vel.setMag(Math.min(distance, snake.get(i).cloneVector2D().add(vel).floor().sub(snake.get(i)).getMag()));
-                distance -= vel.getMag();
-                snake.get(i).add(vel);
-                currentIndex--;
             }
-            while (distance > 0);
         }
-        //rendering
+        render(gc);
+    }
 
+    private void render(GraphicsContext gc) {
         Canvas canvas = gc.getCanvas();
-        //Prepare
 
-        double scaleX = canvas.getWidth() / grid.length;
-        double scaleY = canvas.getHeight() / grid[0].length;
+        double scaleX = canvas.getWidth() / dimension.getWidth();
+        double scaleY = canvas.getHeight() / dimension.getHeight();
+
         gc.save();
         gc.scale(scaleX, scaleY);
-        gc.setFill(SnakeGameColors.backgroundColor);
-        gc.clearRect(0, 0, dimensionX, dimensionY);
 
-        gc.setFill(SnakeGameColors.snakeColor);
-        for (Vector2D vector2D : snake) {
-            gc.fillRect(vector2D.getX(), vector2D.getY(), 1, 1);
+        //Background
+        gc.setFill(Color.WHITE);
+        gc.clearRect(0, 0, dimension.getWidth(), dimension.getHeight());
+
+        //Fruit
+        gc.setFill(Color.ORANGE);
+        gc.fillRect(fruit.getX(), fruit.getY(), 1, 1);
+
+        //Snake
+        gc.setFill(Color.GREENYELLOW);
+        for (int i = 0; i < snakeTiles.size() - 1; i++) {
+            Point2D point = snakeTiles.get(i);
+            gc.fillRect(point.getX(), point.getY(), 1, 1);
         }
+        gc.save();
+        gc.translate(-0.5, -0.5);
+        Point2D centerFront = snakeTiles.get(0).add(new Point2D(0.5, 0.5)).add(getOrientationUnitVector().multiply(movementOffset));
+        gc.fillRect(centerFront.getX(), centerFront.getY(), 1, 1);
+        Point2D centerBack = null;
+        Point2D frontBlock = snakeTiles.get(0).add(getOrientationUnitVector());
+        if (frontBlock.equals(fruit)) {
+            centerBack = snakeTiles.get(snakeTiles.size() - 1).add(0.5, 0.5);
+        } else {
+            centerBack = snakeTiles.get(snakeTiles.size() - 1).add(snakeTiles.get(snakeTiles.size() - 2).subtract(snakeTiles.get(snakeTiles.size() - 1)).multiply(movementOffset).add(0.5, 0.5));
+        }
+        gc.fillRect(centerBack.getX(), centerBack.getY(), 1, 1);
+        gc.restore();
         gc.restore();
     }
 
+    private Point2D getOrientationUnitVector() {
+        switch (currentOrientation) {
+            case TOP:
+                return new Point2D(0, -1);
+            case LEFT:
+                return new Point2D(-1, 0);
+            case BOTTOM:
+                return new Point2D(0, +1);
+            case RIGHT:
+                return new Point2D(+1, 0);
+        }
+        return null;
+    }
+
     private void setFruit() {
-        Random random = new Random();
-        int randomIndex = random.nextInt(freeSpots.size());
-        for (Vector2D vector2D : freeSpots) {
-            if (randomIndex <= 0) {
-                fruit = vector2D.cloneVector2D();
-                return;
-            }
-            randomIndex--;
+        Point2D point;
+        do {
+            Random random = new Random();
+            point = new Point2D(random.nextInt((int) dimension.getWidth()), random.nextInt((int) dimension.getHeight()));
+        } while (snakeTiles.contains(point));
+        fruit = point;
+    }
+
+    private void addNewSnakePoint() {
+        snakeTiles.add(0, snakeTiles.get(0).add(getOrientationUnitVector()));
+        if (!snakeTiles.get(0).equals(fruit)) {
+            snakeTiles.remove(snakeTiles.size() - 1);
+        } else {
+            setFruit();
         }
     }
 
-    private void addSnakePart(int x, int y) {
-        grid[x][y] = GridTileState.BLOCKED;
-        snake.add(new Vector2D(x, y));
-        freeSpots.remove(new Vector2D(x, y));
-    }
-
-    private void removeSnakePart(int indexInSnake) {
-        if (indexInSnake < 0) {
-            indexInSnake = snake.size() + indexInSnake;
+    public void keyPressed(KeyEvent event) {
+        switch (event.getCode()) {
+            case W:
+                scheduledOrientation = Side.TOP;
+                break;
+            case A:
+                scheduledOrientation = Side.LEFT;
+                break;
+            case S:
+                scheduledOrientation = Side.BOTTOM;
+                break;
+            case D:
+                scheduledOrientation = Side.RIGHT;
+                break;
+            default:
+                break;
         }
-        Vector2D pos = snake.remove(indexInSnake);
-        freeSpots.add(pos.cloneVector2D());
-        grid[(int) Math.round(pos.getX())][(int) Math.round(pos.getY())] = GridTileState.EMPTY;
     }
 }
