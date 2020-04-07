@@ -23,9 +23,11 @@ public class SnakeGame {
     private Side currentOrientation = Side.RIGHT;
     private Side scheduledOrientation = currentOrientation;
     private double movementOffset;
+    private SnakeBrain brain;
+    private Stack<Side> path;
 
     //Settings
-    public static final double snakeSpeed = 0.2;
+    public static final double snakeSpeed = 20;
 
     public SnakeGame(Dimension2D dimension) {
         //Game
@@ -35,6 +37,9 @@ public class SnakeGame {
             snakeTiles.add(new Point2D(i, 0));
         }
         setFruit();
+
+        brain = new SnakeBrain(dimension);
+        path = brain.getShortestPath(new HashSet<>(snakeTiles), snakeTiles.get(0), fruit);
     }
 
     public void update(GraphicsContext gc) {
@@ -49,7 +54,10 @@ public class SnakeGame {
             if (movementOffset >= 1) {
                 movementOffset = 0;
                 addNewSnakePoint();
-                currentOrientation = scheduledOrientation;
+                if (path.size() == 0) {
+                    path = brain.getShortestPath(new HashSet<>(snakeTiles), snakeTiles.get(0), fruit);
+                }
+                currentOrientation = path.pop();
 
             }
         }
@@ -128,21 +136,21 @@ public class SnakeGame {
     }
 
     public void keyPressed(KeyEvent event) {
-        switch (event.getCode()) {
-            case W:
-                scheduledOrientation = Side.TOP;
-                break;
-            case A:
-                scheduledOrientation = Side.LEFT;
-                break;
-            case S:
-                scheduledOrientation = Side.BOTTOM;
-                break;
-            case D:
-                scheduledOrientation = Side.RIGHT;
-                break;
-            default:
-                break;
-        }
+//        switch (event.getCode()) {
+//            case W:
+//                scheduledOrientation = Side.TOP;
+//                break;
+//            case A:
+//                scheduledOrientation = Side.LEFT;
+//                break;
+//            case S:
+//                scheduledOrientation = Side.BOTTOM;
+//                break;
+//            case D:
+//                scheduledOrientation = Side.RIGHT;
+//                break;
+//            default:
+//                break;
+//        }
     }
 }

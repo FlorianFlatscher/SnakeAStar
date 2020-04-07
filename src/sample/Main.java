@@ -20,8 +20,8 @@ public class Main extends Application {
         primaryStage.setResizable(false);
 
         //Game
-        Canvas gameCanvas = new Canvas(600, 300);
-        SnakeGame game = new SnakeGame(new Dimension2D(30, 15));
+        Canvas gameCanvas = new Canvas(1200, 600);
+        SnakeGame game = new SnakeGame(new Dimension2D(600, 300));
         root.getChildren().add(gameCanvas);
 
         AnimationTimer timer = new AnimationTimer() {
