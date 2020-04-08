@@ -1,15 +1,11 @@
 package sample.snake.game;
 
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.effect.Light;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.FillRule;
-import javafx.scene.transform.Affine;
-import sample.snake.game.navigation.GridTileState;
-import sample.snake.game.navigation.Orientation;
 
 import java.util.*;
 
@@ -27,7 +23,7 @@ public class SnakeGame {
     private Stack<Side> path;
 
     //Settings
-    public static final double snakeSpeed = 20;
+    public SimpleDoubleProperty snakeSpeed = new SimpleDoubleProperty(50);
 
     public SnakeGame(Dimension2D dimension) {
         //Game
@@ -39,29 +35,37 @@ public class SnakeGame {
         setFruit();
 
         brain = new SnakeBrain(dimension);
-        path = brain.getShortestPath(new HashSet<>(snakeTiles), snakeTiles.get(0), fruit);
+        path = brain.getShortestPath(new ArrayList<>(snakeTiles), snakeTiles.get(0), fruit);
     }
 
-    public void update(GraphicsContext gc) {
+    public boolean update(GraphicsContext gc) {
 
         //Movement
-        double distanceLeft = snakeSpeed;
+        double distanceLeft = snakeSpeed.get();
         while (distanceLeft > 0) {
             double stepSize = Math.min(distanceLeft, 1 - movementOffset);
             distanceLeft -= stepSize;
 
             movementOffset += stepSize;
             if (movementOffset >= 1) {
+
+
                 movementOffset = 0;
                 addNewSnakePoint();
-                if (path.size() == 0) {
-                    path = brain.getShortestPath(new HashSet<>(snakeTiles), snakeTiles.get(0), fruit);
-                }
-                currentOrientation = path.pop();
 
+                if (path.size() == 0) {
+                    path = brain.getShortestPath(new ArrayList<>(snakeTiles), snakeTiles.get(0), fruit);
+                }
+                if (path != null) {
+                    currentOrientation = path.pop();
+                } else {
+                    render(gc);
+                    return false;
+                }
             }
         }
         render(gc);
+        return true;
     }
 
     private void render(GraphicsContext gc) {
@@ -90,6 +94,7 @@ public class SnakeGame {
         gc.save();
         gc.translate(-0.5, -0.5);
         Point2D centerFront = snakeTiles.get(0).add(new Point2D(0.5, 0.5)).add(getOrientationUnitVector().multiply(movementOffset));
+        gc.setFill(Color.BLACK);
         gc.fillRect(centerFront.getX(), centerFront.getY(), 1, 1);
         Point2D centerBack = null;
         Point2D frontBlock = snakeTiles.get(0).add(getOrientationUnitVector());
@@ -98,6 +103,7 @@ public class SnakeGame {
         } else {
             centerBack = snakeTiles.get(snakeTiles.size() - 1).add(snakeTiles.get(snakeTiles.size() - 2).subtract(snakeTiles.get(snakeTiles.size() - 1)).multiply(movementOffset).add(0.5, 0.5));
         }
+        gc.setFill(Color.GREENYELLOW);
         gc.fillRect(centerBack.getX(), centerBack.getY(), 1, 1);
         gc.restore();
         gc.restore();
@@ -114,7 +120,7 @@ public class SnakeGame {
             case RIGHT:
                 return new Point2D(+1, 0);
         }
-        return null;
+        throw new IllegalArgumentException();
     }
 
     private void setFruit() {
@@ -152,5 +158,13 @@ public class SnakeGame {
 //            default:
 //                break;
 //        }
+    }
+
+    public double getSnakeSpeed() {
+        return snakeSpeed.get();
+    }
+
+    public SimpleDoubleProperty snakeSpeedProperty() {
+        return snakeSpeed;
     }
 }
