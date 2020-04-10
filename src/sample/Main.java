@@ -25,8 +25,8 @@ public class Main extends Application {
         primaryStage.getScene().getStylesheets().add("sample/style/style.css");
 
         //Game
-        Canvas gameCanvas = new Canvas(1200, 600);
-        SnakeGame game = new SnakeGame(new Dimension2D(20, 10));
+        Canvas gameCanvas = new Canvas(600, 600);
+        SnakeGame game = new SnakeGame(new Dimension2D(15, 15));
 
          AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -40,11 +40,12 @@ public class Main extends Application {
         timer.start();
 
         //GameSettings
-        Slider snakeSpeed = new Slider(0.01, 10, 0.1);
+        Slider snakeSpeed = new Slider(0.001, 1,  0.001);
         game.snakeSpeedProperty().bindBidirectional(snakeSpeed.valueProperty());
         HBox settings = new HBox(10, new VBox(4, snakeSpeed, new Label("Speed")));
         settings.setId("settings");
         root.getChildren().addAll(gameCanvas, settings);
+
 
 
         primaryStage.show();

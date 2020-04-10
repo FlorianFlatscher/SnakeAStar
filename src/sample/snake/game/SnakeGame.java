@@ -6,6 +6,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
+import sample.snake.game.ai.SnakeBrain;
 
 import java.util.*;
 
@@ -36,9 +37,15 @@ public class SnakeGame {
 
         brain = new SnakeBrain(dimension);
         path = brain.getShortestPath(new ArrayList<>(snakeTiles), snakeTiles.get(0), fruit);
+        currentOrientation = path.pop();
     }
 
+
     public boolean update(GraphicsContext gc) {
+
+        //Background
+        gc.setFill(Color.WHITE);
+        gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
         //Movement
         double distanceLeft = snakeSpeed.get();
@@ -55,7 +62,9 @@ public class SnakeGame {
 
                 if (path.size() == 0) {
                     path = brain.getShortestPath(new ArrayList<>(snakeTiles), snakeTiles.get(0), fruit);
+                    System.out.println("fruit = " + fruit);
                 }
+
                 if (path != null) {
                     currentOrientation = path.pop();
                 } else {
@@ -77,9 +86,7 @@ public class SnakeGame {
         gc.save();
         gc.scale(scaleX, scaleY);
 
-        //Background
-        gc.setFill(Color.WHITE);
-        gc.clearRect(0, 0, dimension.getWidth(), dimension.getHeight());
+
 
         //Fruit
         gc.setFill(Color.ORANGE);
@@ -94,7 +101,7 @@ public class SnakeGame {
         gc.save();
         gc.translate(-0.5, -0.5);
         Point2D centerFront = snakeTiles.get(0).add(new Point2D(0.5, 0.5)).add(getOrientationUnitVector().multiply(movementOffset));
-        gc.setFill(Color.BLACK);
+//        gc.setFill(Color.BLACK);
         gc.fillRect(centerFront.getX(), centerFront.getY(), 1, 1);
         Point2D centerBack = null;
         Point2D frontBlock = snakeTiles.get(0).add(getOrientationUnitVector());
@@ -103,7 +110,7 @@ public class SnakeGame {
         } else {
             centerBack = snakeTiles.get(snakeTiles.size() - 1).add(snakeTiles.get(snakeTiles.size() - 2).subtract(snakeTiles.get(snakeTiles.size() - 1)).multiply(movementOffset).add(0.5, 0.5));
         }
-        gc.setFill(Color.GREENYELLOW);
+//        gc.setFill(Color.BLUE);
         gc.fillRect(centerBack.getX(), centerBack.getY(), 1, 1);
         gc.restore();
         gc.restore();
@@ -127,6 +134,7 @@ public class SnakeGame {
         Point2D point;
         do {
             Random random = new Random();
+//            point = new Point2D(dimension.getWidth() - 1, random.nextInt((int) dimension.getHeight()));
             point = new Point2D(random.nextInt((int) dimension.getWidth()), random.nextInt((int) dimension.getHeight()));
         } while (snakeTiles.contains(point));
         fruit = point;
