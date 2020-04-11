@@ -73,10 +73,7 @@ public class Node {
         this.cameFrom = cameFrom;
     }
 
-    @Override
-    public String toString() {
-        return x + "," + y + ":";
-    }
+
 
     public int getBlockedTimer() {
         return blockedTimer;
