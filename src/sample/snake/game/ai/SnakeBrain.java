@@ -3,14 +3,8 @@ package sample.snake.game.ai;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.effect.Light;
-import javafx.scene.paint.Color;
 
 import java.util.*;
-
-import static java.lang.Math.min;
 
 public class SnakeBrain {
     Dimension2D dimension;
@@ -29,6 +23,7 @@ public class SnakeBrain {
     }
 
     private Node[][] shortTailStar(ArrayList<Point2D> blocked, Point2D start, Point2D target) {
+
         HashSet<String> closedSet = new HashSet<>();
         PriorityQueue<Node> openSet = new PriorityQueue<>(new Comparator<Node>() {
             @Override
@@ -50,6 +45,7 @@ public class SnakeBrain {
         });
         Node[][] nodes = new Node[(int) dimension.getWidth()][(int) dimension.getHeight()];
 
+
         for (int i = 0; i < nodes.length; i++) {
             for (int j = 0; j < nodes[i].length; j++) {
                 nodes[i][j] = new Node(i, j);
@@ -70,29 +66,16 @@ public class SnakeBrain {
             Node current = openSet.poll();
 
 
-//            closedSet.add(current.toString() + "" + current.getCValue());
+            closedSet.add(current.toString() + "" + current.getCValue());
 
             HashSet<Node> neighbours = getNeighbours(nodes, current);
 
             for (Node neighbour : neighbours) {
+                int offset = (neighbour.getX() == (int) target.getX() && neighbour.getY() == (int) target.getY()) ? 1 : 0;
 
-                //Insert here
-//                if (closedSet.contains(neighbour.toString() + "" + (current.getCValue() + 1)) || neighbour.getBlockedTimer() - current.getCValue() > 0) {
-//                    continue;
-//                }
-
-                int freeBlocks = (int) (dimension.getHeight() * dimension.getWidth());
-                freeBlocks -= blocked.size();
-                int offset = (neighbour.getX() == (int) target.getX() && neighbour.getY() == (int) target.getY()) ? 0 : 0;
-                System.out.println("offset = " + offset);
-
-                if (neighbour.getBlockedTimer() - current.getCValue() > 0) {
+                if (neighbour.getBlockedTimer() - current.getCValue() > 0 || closedSet.contains(neighbour + "" + neighbour.getCValue())) {
                     continue;
                 }
-// Insert here
-//                if (closedSet.contains(neighbour) || neighbour.getBlockedTimer() - current.getCValue() > 0) {
-//                    continue;
-//                }
 
                 ArrayList<Node> currentPath = new ArrayList<>();
 
@@ -110,11 +93,11 @@ public class SnakeBrain {
                     currentPath.add(nodes[((int) n.getX())][((int) n.getY())]);
                 }
 
-
-                Node tail = currentPath.get(Math.min((int) (blocked.size() + offset), currentPath.size() - 1));
+                Node tail = currentPath.get(blocked.size() - 1 + offset);
 
                 ArrayList<Point2D> simulationBlocked = new ArrayList<>();
-                for (int i = 0; i < Math.min((int) (blocked.size() + offset), currentPath.size() - 1); i++) {
+
+                for (int i = 0; i < blocked.size() - 1 + offset; i++) {
                     simulationBlocked.add(new Point2D(currentPath.get(i).getX(), currentPath.get(i).getY()));
                 }
                 Node[][] path = shortAStar(new HashSet<>(simulationBlocked), new Point2D(neighbour.getX(), neighbour.getY()), new Point2D(tail.getX(), tail.getY()));
@@ -124,7 +107,7 @@ public class SnakeBrain {
                 }
 
 //                if (!openSet.contains(neighbour) && !currentPath.subList(1, currentPath.size() - blocked.size() + 1).contains(neighbour)) {
-                if (!currentPath.subList(1, currentPath.size() - blocked.size() + 1).contains(neighbour)) {
+                if (!currentPath.subList(1, blocked.size() + offset).contains(neighbour)) {
 //                if (!openSet.contains(neighbour) && !simulationBlocked.subList(1, simulationBlocked.size()).contains(new Point2D(neighbour.getX(), neighbour.getY()))) {
                     //Never looked at before
                     openSet.remove(neighbour);
@@ -156,7 +139,7 @@ public class SnakeBrain {
         for (int i = 0; i < 4; i++) {
             try {
                 neighbours.add(nodes[current.getX() + fastCos[i]][current.getY() + fastSin[i]]);
-            } catch (ArrayIndexOutOfBoundsException ignored) {
+            } catch (ArrayIndexOutOfBoundsException e) {
 
             }
         }

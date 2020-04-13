@@ -62,7 +62,6 @@ public class SnakeGame {
 
                 if (path.size() == 0) {
                     System.out.println("fruit = " + fruit);
-
                     path = brain.getShortestPath(new ArrayList<>(snakeTiles), snakeTiles.get(0), fruit);
                 }
 
