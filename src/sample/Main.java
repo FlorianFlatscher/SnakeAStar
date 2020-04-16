@@ -2,56 +2,55 @@ package sample;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.binding.Binding;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.Dimension2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import sample.snake.engine.Game;
-import sample.snake.engine.GameEngine;
+import javafx.stage.StageStyle;
 import sample.snake.game.SnakeGame;
 
 
 public class Main extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         //Window
         VBox root = new VBox();
-        primaryStage.setTitle("Loading...");
-        primaryStage.setScene(new Scene(root, 600, 300));
+        primaryStage.setScene(new Scene(root));
         primaryStage.setResizable(false);
+        primaryStage.getScene().getStylesheets().add("sample/style/style.css");
 
-        //Canvas
-        Canvas gameCanvas = new Canvas(600, 300);
-        GameEngine<SnakeGame> engine = new GameEngine<>(gameCanvas, SnakeGame.class);
-        engine.start();
+        //Game
+        Canvas gameCanvas = new Canvas(600, 600);
+        SnakeGame game = new SnakeGame(new Dimension2D(10, 10));
 
+        AnimationTimer timer = new AnimationTimer() {
+            @Override
+            public void handle(long l) {
+                if (!game.update(gameCanvas.getGraphicsContext2D())) {
+                    this.stop();
+                }
+            }
+        };
+        primaryStage.getScene().setOnKeyPressed(game::keyPressed);
+        timer.start();
 
+        //GameSettings
+        Slider snakeSpeed = new Slider(0.001, 1, 0.001);
+        game.snakeSpeedProperty().bindBidirectional(snakeSpeed.valueProperty());
+        HBox settings = new HBox(10, new VBox(4, snakeSpeed, new Label("Speed")));
+        settings.setId("settings");
+        root.getChildren().addAll(gameCanvas, settings);
 
 
 
 
         primaryStage.show();
 
-        new AnimationTimer() {
-
-            @Override
-            public void handle(long l) {
-                primaryStage.setTitle("Snake (" + Math.round(engine.getFps()) + " fps)");
-            }
-        }.start();
-
-
-        root.getChildren().add(gameCanvas);
     }
 
 
