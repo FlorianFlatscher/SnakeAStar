@@ -2,13 +2,17 @@ package sample.snake.engine;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.*;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
+import javafx.util.Duration;
 import sample.snake.game.SnakeGame;
 
 import java.lang.reflect.InvocationTargetException;
@@ -54,35 +58,20 @@ public class GameEngine<T extends Game> {
         AtomicReference<KeyCode> lastKey = new AtomicReference<>();
         canvas.setOnKeyPressed((keyEvent -> lastKey.set(keyEvent.getCode())));
 
-        Timeline line = new Timeline(120, new KeyFrame());
+//        Timeline timeline = new Timeline(60, new KeyFrame(Duration.millis(1000 / 60.), new EventHandler<ActionEvent>() {
+        AnimationTimer animationTimer = new AnimationTimer() {
             @Override
-            public void handle(long l) {
-                secondsPassed.setValue((System.nanoTime() - startNanoTime) / 1_000_000_000.0);
+            public void handle(long now) {
+
+//                secondsPassed.setValue((System.nanoTime() - startNanoTime) / 1_000_000_000.0);
                 final long nanosSinceLastFrame = System.nanoTime() - lastFrameNanoTime;
-                fps.setValue(1_000_000_000.0 / (nanosSinceLastFrame));
+
+                game.update(canvas.getGraphicsContext2D(), 1/60.);
                 lastFrameNanoTime = System.nanoTime();
 
-                framesPassed.setValue(framesPassed.get() + 1);
             }
-
-
-        final LongProperty lastUpdateTime = new SimpleLongProperty(0);
-        final AnimationTimer timer = new AnimationTimer() {
-            @Override
-            public void handle(long timestamp) {
-                if (lastUpdateTime.get() > 0) {
-                    long elapsedTime = timestamp - lastUpdateTime.get();
-                    checkCollisions(ballContainer.getWidth(), ballContainer.getHeight());
-                    game.update(canvas.getGraphicsContext2D(), 1/60.);
-
-                    frameStats.addFrame(elapsedTime);
-                }
-                lastUpdateTime.set(timestamp);
-            }
-
         };
-        timer.start();
-
+        animationTimer.start();
     }
 
     public void stopGame() {

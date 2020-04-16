@@ -89,7 +89,7 @@ public class SnakeGame extends Game {
 
         gc.setFill(SnakeGameColors.snakeColor);
         for (Vector2D vector2D : snake) {
-            gc.fillRect(vector2D.getX(), vector2D.getY(), 1, 1);
+            gc.fillRect(vector2D.getX() - 0.2, vector2D.getY() - 0.2, 1.1, 1.1);
         }
         gc.restore();
     }
@@ -120,4 +120,5 @@ public class SnakeGame extends Game {
         freeSpots.add(pos.cloneVector2D());
         grid[(int) Math.round(pos.getX())][(int) Math.round(pos.getY())] = GridTileState.EMPTY;
     }
+
 }
