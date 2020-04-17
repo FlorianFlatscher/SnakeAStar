@@ -1,2 +1,2 @@
 # SnakeAStar
- Snake bot using A* algorrithm (Java)
+(Still in progress) Snake bot using A* algorrithm (Java)
